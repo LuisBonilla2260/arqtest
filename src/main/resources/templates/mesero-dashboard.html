@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Mesero - Restaurante</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 i {
+            color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pedidos-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .pedido-item {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .pedido-id {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .pedido-estado {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .estado-pendiente { background: #fff3cd; color: #856404; }
+        .estado-preparacion { background: #d1ecf1; color: #0c5460; }
+        .estado-listo { background: #d4edda; color: #155724; }
+        .estado-entregado { background: #cce5ff; color: #004085; }
+
+        .pedido-detalles {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .pedido-total {
+            font-weight: 600;
+            color: #333;
+            margin-top: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .producto-card {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .producto-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .producto-card.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .producto-precio {
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 0.5rem;
+        }
+
+        .cantidad-input {
+            width: 60px;
+            text-align: center;
+            margin: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-utensils"></i> Dashboard Mesero</h1>
+        <div class="user-info">
+            <span id="username">Mesero</span>
+            <button class="btn-logout" id="logoutBtn">Cerrar Sesión</button>
+
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Crear Nuevo Pedido -->
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Nuevo Pedido</h2>
+                <form id="nuevoPedidoForm">
+                    <div class="form-group">
+                        <label for="mesaNumero">Mesa disponible</label>
+                        <select id="mesaNumero" required>
+                            <option value="">Seleccione una mesa</option>
+                            <!-- Thymeleaf: mesasDisponibles es la lista pasada desde el controlador -->
+                            <th:block th:each="mesa : ${mesasDisponibles}">
+                                <option th:value="${mesa.id}" th:text="'Mesa ' + ${mesa.numero} + ' (' + ${mesa.capacidad} + ' personas)'"></option>
+                            </th:block>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn-secondary" id="agregarProductosBtn">Agregar productos</button>
+                    </div>
+                    <button type="submit" class="btn-primary">Crear Pedido</button>
+                </form>
+            </div>
+
+            <!-- Estadísticas Rápidas -->
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Estadísticas</h2>
+                <div id="stats">
+                    <p>Pedidos Pendientes: <span id="pedidosPendientes">0</span></p>
+                    <p>Pedidos en Preparación: <span id="pedidosPreparacion">0</span></p>
+                    <p>Total de Pedidos Hoy: <span id="totalPedidos">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Pedidos -->
+        <div class="card">
+            <h2><i class="fas fa-list"></i> Mis Pedidos</h2>
+            <div id="pedidosList" class="pedidos-list">
+                <!-- Los pedidos se cargarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Productos -->
+    <div id="productosModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Agregar Productos al Pedido</h2>
+            <div id="productosGrid" class="productos-grid">
+                <!-- Los productos se cargarán dinámicamente -->
+            </div>
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="btn-primary" onclick="confirmarProductos()">Confirmar Productos</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPedidoId = null;
+        let selectedProductos = [];
+        let productosParaNuevoPedido = [];
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== DEBUG LOCALSTORAGE ===');
+            console.log('Token:', localStorage.getItem('token'));
+            console.log('UserId:', localStorage.getItem('userId'));
+            console.log('Username:', localStorage.getItem('username'));
+            console.log('UserRole:', localStorage.getItem('userRole'));
+            console.log('========================');
+            
+            loadUserInfo();
+            loadPedidos();
+            loadStats();
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+            }
+        }
+
+        function loadUserInfo() {
+            const username = localStorage.getItem('username');
+            document.getElementById('username').textContent = username;
+        }
+
+        async function loadPedidos() {
+            try {
+                const token = localStorage.getItem('token');
+                const userId = localStorage.getItem('userId');
+                
+                console.log('Debug - Token:', token);
+                console.log('Debug - UserId:', userId);
+                
+                if (!userId) {
+                    showAlert('No se encontró el usuario. Por favor, inicia sesión nuevamente.', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`/api/pedidos/mesero/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const pedidos = await response.json();
+                    displayPedidos(pedidos);
+                }
+            } catch (error) {
+                console.error('Error cargando pedidos:', error);
+            }
+        }
+
+        function displayPedidos(pedidos) {
+            const container = document.getElementById('pedidosList');
+            container.innerHTML = '';
+            
+            if (pedidos.length === 0) {
+                container.innerHTML = '<p>No hay pedidos aún.</p>';
+                return;
+            }
+            
+            pedidos.forEach(pedido => {
+                const pedidoElement = createPedidoElement(pedido);
+                container.appendChild(pedidoElement);
+            });
+        }
+
+        function createPedidoElement(pedido) {
+            const div = document.createElement('div');
+            div.className = 'pedido-item';
+            
+            const estadoClass = `estado-${pedido.estado.toLowerCase().replace('_', '-')}`;
+            
+            div.innerHTML = `
+                <div class="pedido-header">
+                    <span class="pedido-id">Pedido #${pedido.id.substring(0, 8)}</span>
+                    <span class="pedido-estado ${estadoClass}">${pedido.estado}</span>
+                </div>
+                <div class="pedido-detalles">
+                    Mesa: ${pedido.mesaNumero || 'N/A'}<br>
+                    Fecha: ${new Date(pedido.fecha).toLocaleString()}<br>
+                    Productos: ${pedido.detalles ? pedido.detalles.length : 0}
+                </div>
+                <div class="pedido-total">
+                    Total: $${pedido.totalPedido || 0}
+                </div>
+                <div style="margin-top: 1rem;">
+                    ${pedido.estado === 'PENDIENTE' ? 
+                        `<button class="btn-success" onclick="agregarProductos('${pedido.id}')">Agregar Productos</button>
+                         <button class="btn-warning" onclick="enviarACocina('${pedido.id}')">Enviar a Cocina</button>` : 
+                        ''
+                    }
+                    ${pedido.estado === 'LISTO' ? 
+                        `<button class="btn-success" onclick="marcarEntregado('${pedido.id}')">Marcar Entregado</button>` : 
+                        ''
+                    }
+                </div>
+            `;
+            
+            return div;
+        }
+
+        async function loadStats() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                const [pendientes, preparacion, total] = await Promise.all([
+                    fetch('/api/pedidos/stats/estado/PENDIENTE', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/pedidos/stats/estado/EN_PREPARACION', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/pedidos', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                
+                if (pendientes.ok) {
+                    const pendientesCount = await pendientes.json();
+                    document.getElementById('pedidosPendientes').textContent = pendientesCount;
+                }
+                
+                if (preparacion.ok) {
+                    const preparacionCount = await preparacion.json();
+                    document.getElementById('pedidosPreparacion').textContent = preparacionCount;
+                }
+                
+                if (total.ok) {
+                    const totalPedidos = await total.json();
+                    document.getElementById('totalPedidos').textContent = totalPedidos.length;
+                }
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+
+        // Crear nuevo pedido
+        document.getElementById('nuevoPedidoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const mesaId = document.getElementById('mesaNumero').value;
+            const userId = localStorage.getItem('userId');
+
+            console.log('Debug - MesaId:', mesaId);
+            console.log('Debug - UserId:', userId);
+
+            if (!mesaId || mesaId === "null") {
+                showAlert('Debes seleccionar una mesa disponible.', 'error');
+                return;
+            }
+
+            if (!userId || userId === "null") {
+                showAlert('No se encontró el usuario. Por favor, inicia sesión nuevamente.', 'error');
+                return;
+            }
+
+            if (productosParaNuevoPedido.length === 0) {
+                showAlert('Debes agregar al menos un producto al pedido.', 'error');
+                return;
+            }
+
+            const pedidoPayload = {
+                mesaId: mesaId,
+                meseroId: userId,
+                estado: 'PENDIENTE',
+                fecha: new Date().toISOString(),
+                detalles: productosParaNuevoPedido
+            };
+            console.log("Payload pedido:", pedidoPayload);
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(pedidoPayload)
+                });
+
+                if (response.ok) {
+                    const pedido = await response.json();
+                    showAlert('Pedido creado exitosamente!', 'success');
+                    document.getElementById('mesaNumero').value = '';
+                    productosParaNuevoPedido = [];
+                    loadPedidos();
+                    loadStats();
+                } else {
+                    showAlert('Error creando el pedido', 'error');
+                }
+            } catch (error) {
+                showAlert('Error de conexión', 'error');
+            }
+        });
+
+        async function agregarProductos(pedidoId) {
+            currentPedidoId = pedidoId;
+            selectedProductos = [];
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/productos/disponibles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const productos = await response.json();
+                    displayProductos(productos);
+                    document.getElementById('productosModal').style.display = 'block';
+                }
+            } catch (error) {
+                showAlert('Error cargando productos', 'error');
+            }
+        }
+
+        function displayProductos(productos) {
+            const container = document.getElementById('productosGrid');
+            container.innerHTML = '';
+            
+            productos.forEach(producto => {
+                const div = document.createElement('div');
+                div.className = 'producto-card';
+                div.onclick = () => toggleProducto(producto, div);
+                
+                div.innerHTML = `
+                    <h4>${producto.nombre}</h4>
+                    <p>${producto.categoria}</p>
+                    <div class="producto-precio">$${producto.precio}</div>
+                    <input type="number" class="cantidad-input" value="1" min="1" 
+                           onchange="updateCantidad('${producto.id}', this.value)">
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        function toggleProducto(producto, element) {
+            const cantidad = parseInt(element.querySelector('.cantidad-input').value);
+            
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                selectedProductos = selectedProductos.filter(p => p.id !== producto.id);
+            } else {
+                element.classList.add('selected');
+                selectedProductos.push({ ...producto, cantidad });
+            }
+        }
+
+        function updateCantidad(productoId, cantidad) {
+            const producto = selectedProductos.find(p => p.id === productoId);
+            if (producto) {
+                producto.cantidad = parseInt(cantidad);
+            }
+        }
+
+        document.getElementById('agregarProductosBtn').addEventListener('click', async function() {
+            // Abre el modal y permite seleccionar productos para el nuevo pedido
+            productosParaNuevoPedido = [];
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/productos/disponibles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const productos = await response.json();
+                    displayProductosNuevoPedido(productos);
+                    document.getElementById('productosModal').style.display = 'block';
+                }
+            } catch (error) {
+                showAlert('Error cargando productos', 'error');
+            }
+        });
+
+        function displayProductosNuevoPedido(productos) {
+            const container = document.getElementById('productosGrid');
+            container.innerHTML = '';
+            productos.forEach(producto => {
+                const div = document.createElement('div');
+                div.className = 'producto-card';
+                div.onclick = () => toggleProductoNuevoPedido(producto, div);
+                div.innerHTML = `
+                    <h4>${producto.nombre}</h4>
+                    <p>${producto.categoria}</p>
+                    <div class="producto-precio">$${producto.precio}</div>
+                    <input type="number" class="cantidad-input" value="1" min="1" 
+                           onchange="updateCantidadNuevoPedido('${producto.id}', this.value)">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleProductoNuevoPedido(producto, element) {
+            const cantidad = parseInt(element.querySelector('.cantidad-input').value);
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                productosParaNuevoPedido = productosParaNuevoPedido.filter(p => p.productoId !== producto.id);
+            } else {
+                element.classList.add('selected');
+                productosParaNuevoPedido.push({ productoId: producto.id, cantidad: cantidad });
+            }
+        }
+
+        function updateCantidadNuevoPedido(productoId, cantidad) {
+            const producto = productosParaNuevoPedido.find(p => p.productoId === productoId);
+            if (producto) {
+                producto.cantidad = parseInt(cantidad);
+            }
+        }
+
+        // Sobreescribe confirmarProductos solo para nuevo pedido
+        function confirmarProductos() {
+            if (productosParaNuevoPedido.length === 0) {
+                showAlert('Selecciona al menos un producto', 'error');
+                return;
+            }
+            closeModal();
+            showAlert('Productos seleccionados para el pedido', 'success');
+        }
+
+        async function enviarACocina(pedidoId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/pedidos/${pedidoId}/estado?nuevoEstado=EN_PREPARACION`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('Pedido enviado a cocina!', 'success');
+                    loadPedidos();
+                    loadStats();
+                }
+            } catch (error) {
+                showAlert('Error enviando pedido a cocina', 'error');
+            }
+        }
+
+        async function marcarEntregado(pedidoId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/pedidos/${pedidoId}/estado?nuevoEstado=ENTREGADO`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('Pedido marcado como entregado!', 'success');
+                    loadPedidos();
+                    loadStats();
+                }
+            } catch (error) {
+                showAlert('Error marcando pedido como entregado', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('productosModal').style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.dashboard-grid'));
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('productosModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
